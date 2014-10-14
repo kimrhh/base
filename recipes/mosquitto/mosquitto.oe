@@ -1,0 +1,5 @@
+require mosquitto.inc
+
+
+SRC_REV ?= "commit=0da9f168091457079f50864c39ba174e526e56b3"
+SRC_URI = "hg://bitbucket.org/oojah/mosquitto;protocol=https;${SRC_REV}"
