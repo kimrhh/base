@@ -17,7 +17,7 @@ DEFAULT_USE_ust_sysvinit_stop		= "0"
 
 DEFAULT_USE_ust_basedir			= "/tmp/ust"
 
-UST_LIB_DEPENDS = "liburcu libpthread libdl librt"
+UST_LIB_DEPENDS = "liburcu liburcu-bp libpthread libdl librt"
 
 # Recipe build dependencies
 DEPENDS =+ "${UST_LIB_DEPENDS}"
