@@ -1,0 +1,34 @@
+From 4886b953f559099768c612c2990288340f8c4289 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20Hundeb=C3=B8ll?= <mnhu@prevas.dk>
+Date: Wed, 22 Jul 2015 11:45:02 +0200
+Subject: [PATCH] test if target compiler supports -m32
+
+---
+ build/toolchain.gypi | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/build/toolchain.gypi b/build/toolchain.gypi
+index 4dbf42b..75ad9ff 100644
+--- a/build/toolchain.gypi
++++ b/build/toolchain.gypi
+@@ -922,8 +922,15 @@
+           ['_toolset=="target"', {
+             'conditions': [
+               ['target_cxx_is_biarch==1 and nacl_target_arch!="nacl_x64"', {
+-                'cflags': [ '-m32' ],
+-                'ldflags': [ '-m32' ],
++                 # Pass -m32 to the compiler iff it understands the flag.
++                 'variables': {
++                    'm32flag': '<!(' +
++                        '(echo | $(echo ${CXX:-$(which g++)}) -m32 -E - ' +
++                        '    > /dev/null 2>&1) ' +
++                        '&& echo -n "-m32" || true)',
++                  },
++                  'cflags': [ '<(m32flag)' ],
++                  'ldflags': [ '<(m32flag)' ],
+               }],
+             ],
+             'xcode_settings': {
+-- 
+2.4.6
+
