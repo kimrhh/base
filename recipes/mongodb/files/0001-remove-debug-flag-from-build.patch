@@ -1,0 +1,24 @@
+From fa0455b9e9cb61afd90e07c5fdf9fb3517bd06c4 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20Hundeb=C3=B8ll?= <mnhu@prevas.dk>
+Date: Thu, 23 Jul 2015 11:57:23 +0200
+Subject: [PATCH] remove debug flag from build
+
+---
+ SConstruct | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/SConstruct b/SConstruct
+index 0a3273a..908d726 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -1216,7 +1216,6 @@ if env.TargetOSIs('posix'):
+     env.Append( CCFLAGS=["-fno-omit-frame-pointer",
+                          "-fPIC",
+                          "-fno-strict-aliasing",
+-                         "-ggdb",
+                          "-pthread",
+                          "-Wall",
+                          "-Wsign-compare",
+-- 
+2.4.6
+

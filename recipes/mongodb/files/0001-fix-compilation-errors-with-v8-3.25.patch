@@ -1,0 +1,74 @@
+From be4275d5af4f59024ebcfeb677706687c670611a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20Hundeb=C3=B8ll?= <mnhu@prevas.dk>
+Date: Wed, 22 Jul 2015 15:12:27 +0200
+Subject: [PATCH] fix compilation errors with v8-3.25
+
+---
+ src/mongo/scripting/engine_v8-3.25.cpp | 6 +++---
+ src/mongo/scripting/v8-3.25_db.cpp     | 5 +++--
+ 2 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/src/mongo/scripting/engine_v8-3.25.cpp b/src/mongo/scripting/engine_v8-3.25.cpp
+index 14b2a43..bfbb3ce 100644
+--- a/src/mongo/scripting/engine_v8-3.25.cpp
++++ b/src/mongo/scripting/engine_v8-3.25.cpp
+@@ -1501,7 +1501,7 @@ v8::Local<v8::Value> V8Scope::mongoToV8Element(const BSONElement& elem, bool rea
+         case mongo::Object:
+             return mongoToLZV8(elem.embeddedObject(), readOnly);
+         case mongo::Date:
+-            return v8::Date::New(_isolate, static_cast<double>(elem.date.toMillisSinceEpoch()));
++            return v8::Date::New(_isolate, static_cast<double>(elem.Date().toMillisSinceEpoch()));
+         case mongo::Bool:
+             return v8::Boolean::New(_isolate, elem.boolean());
+         case mongo::EOO:
+@@ -1536,7 +1536,7 @@ v8::Local<v8::Value> V8Scope::mongoToV8Element(const BSONElement& elem, bool rea
+         case mongo::bsonTimestamp: {
+             v8::TryCatch tryCatch;
+ 
+-            argv[0] = v8::Number::New(_isolate, elem.timestampTime() / 1000);
++            argv[0] = v8::Number::New(_isolate, elem.timestampTime().toMillisSinceEpoch() / 1000);
+             argv[1] = v8::Number::New(_isolate, elem.timestampInc());
+ 
+             v8::Local<v8::Value> ret = TimestampFT()->GetFunction()->NewInstance(2, argv);
+@@ -1721,7 +1721,7 @@ void V8Scope::v8ToMongoElement(BSONObjBuilder& b,
+     }
+     if (value->IsDate()) {
+         long long dateval = (long long)(v8::Date::Cast(*value)->NumberValue());
+-        b.appendDate(sname, Date_t((unsigned long long)dateval));
++        b.appendDate(sname, Date_t().fromMillisSinceEpoch((unsigned long long)dateval));
+         return;
+     }
+     if (value->IsExternal())
+diff --git a/src/mongo/scripting/v8-3.25_db.cpp b/src/mongo/scripting/v8-3.25_db.cpp
+index e4fd6d8..9e81974 100644
+--- a/src/mongo/scripting/v8-3.25_db.cpp
++++ b/src/mongo/scripting/v8-3.25_db.cpp
+@@ -42,6 +42,7 @@
+ #include "mongo/util/base64.h"
+ #include "mongo/util/hex.h"
+ #include "mongo/util/text.h"
++#include "mongo/bson/timestamp.h"
+ 
+ using namespace std;
+ using std::unique_ptr;
+@@ -135,7 +136,7 @@ v8::Local<v8::Value> mongoConsExternal(V8Scope* scope,
+     verify(scope->MongoFT()->HasInstance(args.This()));
+ 
+     auto statusWithHost = ConnectionString::parse(host);
+-    if (!status.isOK()) {
++    if (!statusWithHost.isOK()) {
+         return v8AssertionException(statusWithHost.getStatus().reason());
+     }
+ 
+@@ -774,7 +775,7 @@ v8::Local<v8::Value> dbTimestampInit(V8Scope* scope,
+             return v8AssertionException("Timestamp increment must be a number");
+         }
+         int64_t t = args[0]->IntegerValue();
+-        int64_t largestVal = int64_t(OpTime::max().getSecs());
++        int64_t largestVal = int64_t(Timestamp::max().getSecs());
+         if (t > largestVal)
+             return v8AssertionException(str::stream() << "The first argument must be in seconds; "
+                                                       << t << " is too large (max " << largestVal
+-- 
+2.4.6
+

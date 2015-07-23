@@ -1,0 +1,51 @@
+From e79f7c8ae7b0ff2459a8136106a0692594ba0202 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20Hundeb=C3=B8ll?= <mnhu@prevas.dk>
+Date: Tue, 21 Jul 2015 11:17:19 +0200
+Subject: [PATCH] fix missing search for system asio libs
+
+---
+ SConstruct                 | 3 +++
+ src/third_party/SConscript | 6 ++----
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/SConstruct b/SConstruct
+index 1f38ab7..ba91d2a 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -2203,6 +2203,9 @@ def doConfigure(myenv):
+             """):
+             conf.env.SetConfigHeaderDefine('MONGO_CONFIG_HAVE_FIPS_MODE_SET')
+ 
++    if use_system_version_of_library("asio"):
++        conf.CheckCXXHeader("boost/asio.hpp")
++
+     return conf.Finish()
+ 
+ env = doConfigure( env )
+diff --git a/src/third_party/SConscript b/src/third_party/SConscript
+index 594ea27..e1b4b88 100644
+--- a/src/third_party/SConscript
++++ b/src/third_party/SConscript
+@@ -162,6 +162,7 @@ if use_system_version_of_library("zlib"):
+         SYSLIBDEPS=[
+             env['LIBDEPS_ZLIB_SYSLIBDEP'],
+         ])
++    print("syslibdep: {}".format(env['LIBDEPS_ZLIB_SYSLIBDEP']))
+ else:
+     zlibEnv = env.Clone()
+     zlibEnv.InjectThirdPartyIncludePaths(libraries=['zlib'])
+@@ -304,10 +305,7 @@ if wiredtiger:
+         ])
+ 
+ if use_system_version_of_library("asio"):
+-    asioEnv = env.Clone(
+-        SYSLIBDEPS=[
+-            env['LIBDEPS_ASIO_SYSLIBDEP'],
+-        ])
++    asioEnv = env.Clone([])
+ else:
+     asioEnv = env.Clone()
+     asioEnv.InjectThirdPartyIncludePaths(libraries=['asio'])
+-- 
+2.4.6
+

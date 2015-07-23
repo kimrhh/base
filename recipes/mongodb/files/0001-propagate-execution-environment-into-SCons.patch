@@ -1,0 +1,25 @@
+From 271460f8cad7d6c114e62b4d91859b1864c07716 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20Hundeb=C3=B8ll?= <mnhu@prevas.dk>
+Date: Tue, 21 Jul 2015 07:25:27 +0200
+Subject: [PATCH] propagate execution environment into SCons
+
+---
+ SConstruct | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/SConstruct b/SConstruct
+index 2a7ee46..0f05ee9 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -791,7 +791,7 @@ envDict = dict(BUILD_ROOT=buildDir,
+                CONFIG_HEADER_DEFINES={},
+                )
+ 
+-env = Environment(variables=env_vars, **envDict)
++env = Environment(variables=env_vars, ENV=os.environ, **envDict)
+ del envDict
+ 
+ env.AddMethod(env_os_is_wrapper, 'TargetOSIs')
+-- 
+2.4.6
+
