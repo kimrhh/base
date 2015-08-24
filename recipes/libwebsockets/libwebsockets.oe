@@ -1,6 +1,6 @@
 require libwebsockets.inc
 
-SRC_REV ?= "commit=917f43ab821382bb54a3e9d65270c0946b89c1cf"
+SRC_REV ?= "tag=v1.4-chrome43-firefox-36"
 SRC_URI = "git://github.com/warmcat/libwebsockets.git;protocol=https;${SRC_REV}"
 
 S = "${SRCDIR}/libwebsockets"
