@@ -4,7 +4,7 @@ LICENSE = "MIT BSD Artistic-2.0"
 
 inherit make c c++
 
-DEPENDS = "openssl libz librt libm libdl libv8 libv8-dev"
+DEPENDS = "openssl libz librt libm libdl"
 RECIPE_TYPES = "machine native sdk"
 
 SRC_URI = " \
@@ -36,9 +36,6 @@ do_configure () {
                --shared-openssl \
                --shared-openssl-includes=${SYSROOT}${includedir} \
                --shared-openssl-libpath=${SYSROOT}${libdir} \
-               --shared-v8 \
-               --shared-v8-includes=${SYSROOT}${includedir} \
-               --shared-v8-libpath=${SYSROOT}${libdir} \
                --shared-zlib \
                --shared-zlib-includes=${SYSROOT}${includedir} \
                --shared-zlib-libpath=${SYSROOT}${libdir} \
@@ -54,8 +51,8 @@ do_install () {
     oe_runmake install DESTDIR=${D} PREFIX=${prefix}
 }
 
-DEPENDS_${PN} = "libz libv8 openssl libdl librt libstdc++ libm libgcc libpthread libc"
-RDEPENDS_${PN} = "libz libv8 openssl libdl librt libstdc++ libm libgcc libpthread libc"
+DEPENDS_${PN} = "libz openssl libdl librt libstdc++ libm libgcc libpthread libc"
+RDEPENDS_${PN} = "libz openssl libdl librt libstdc++ libm libgcc libpthread libc"
 
 PACKAGES_${PN} =+ "${PN}-dev"
 FILES_${PN}-dev = "${includedir}/node ${datadir}"
