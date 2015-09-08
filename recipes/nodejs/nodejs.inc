@@ -20,8 +20,8 @@ def do_configure_map_nodejs_arch(d):
     import re
     a = d.getVar('TARGET_ARCH', True)
     if   re.match('p(pc|owerpc)(|64)', a):  a = 'ppc'
-    elif re.match('i.86$', a):              a = 'ia32'
-    elif re.match('x86_64$', a):            a = 'x64'
+    elif re.match('i.86', a):               a = 'ia32'
+    elif re.match('x86_64', a):             a = 'x64'
     elif re.match('arm', a):                a = 'arm'
     d.set('NODEJS_CONF_ARCH', a)
 
