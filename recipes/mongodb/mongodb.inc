@@ -66,7 +66,7 @@ RDEPENDS_COMMON = " \
                    libsystem \
                    libchrono \
                    libyaml-cpp \
-                   libv8-3 \
+                   libv8 \
                    gperftools-libtcmalloc \
                    openssl \
                    librt \
