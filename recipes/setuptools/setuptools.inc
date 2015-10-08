@@ -10,5 +10,6 @@ do_compile() {
 }
 
 do_install() {
-        python setup.py install --home ${D}
+        install -d ${D}${libdir}/python
+        PYTHONPATH="${D}${libdir}/python" python setup.py install --home ${D}
 }
