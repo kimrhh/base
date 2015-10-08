@@ -6,7 +6,7 @@ RECIPE_TYPES = "machine native sdk"
 inherit make c++ library
 
 SRC_URI = " \
-           https://chromium.googlesource.com/v8/v8.git/+archive/${PV}.tar.gz \
+           git://chromium.googlesource.com/v8/v8;protocol=https;${SRC_REV} \
            file://0001-avoid-thin-static-archives.patch \
 "
 

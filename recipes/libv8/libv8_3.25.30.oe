@@ -1,3 +1,4 @@
 require libv8.inc
 
+SRC_REV="tag=3.25.30"
 LIBRARY_VERSION = "3"
