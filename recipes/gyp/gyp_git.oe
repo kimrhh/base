@@ -8,7 +8,7 @@ SRC_URI = "git://chromium.googlesource.com/external/gyp;protocol=https;${SRC_REV
 S = "${SRCDIR}/gyp"
 FILES_${PN} += "/lib/python"
 
-PYTHON_PATH = "${BUILD_SYSROOT}/lib/python"
+PYTHON_PATH = "${BUILD_SYSROOT}/lib/python:${D}${libdir}/python"
 
 do_compile() {
     export PYTHONPATH=${PYTHON_PATH}
@@ -16,6 +16,7 @@ do_compile() {
 }
 
 do_install() {
+    install -d ${D}${libdir}/python
     export PYTHONPATH=${PYTHON_PATH}
     python setup.py install --home ${D}
 }
