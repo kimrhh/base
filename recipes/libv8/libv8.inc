@@ -10,6 +10,7 @@ SRC_URI = " \
            file://0001-avoid-thin-static-archives.patch \
 "
 
+S = "${SRCDIR}/v8"
 DEPENDS_${PN} = "libpthread libdl librt libgcc libm libstdc++"
 RDEPENDS_${PN} = "libpthread libdl librt libgcc libm libstdc++"
 
