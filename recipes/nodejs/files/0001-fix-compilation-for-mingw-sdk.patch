@@ -1,0 +1,177 @@
+From ed8c9f54598dfe49d02b3a1a9725ceb032f14123 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20Hundeb=C3=B8ll?= <mnhu@prevas.dk>
+Date: Tue, 13 Oct 2015 12:40:33 +0200
+Subject: [PATCH] fix compilation for mingw sdk
+
+redefinitions/reimplementations of snprintf are removed as these are
+provided by gcc when building for mingw.
+
+upstream-status: not appropriate - linux->mingw compilation only
+---
+ configure                                   |  4 +---
+ deps/v8/BUILD.gn                            |  2 +-
+ deps/v8/src/base/platform/platform-win32.cc |  1 +
+ deps/v8/src/ostreams.cc                     |  4 ----
+ deps/v8/tools/gyp/v8.gyp                    |  2 +-
+ node.gyp                                    |  2 +-
+ src/cares_wrap.cc                           |  8 ++++----
+ src/node.cc                                 |  1 -
+ src/node_internals.h                        | 15 ---------------
+ src/node_main.cc                            |  2 +-
+ 10 files changed, 10 insertions(+), 31 deletions(-)
+
+diff --git a/configure b/configure
+index 66cb312..9d4b73b 100755
+--- a/configure
++++ b/configure
+@@ -1034,10 +1034,8 @@ if options.use_ninja:
+   gyp_args += ['-f', 'ninja-' + flavor]
+ elif options.use_xcode:
+   gyp_args += ['-f', 'xcode']
+-elif flavor == 'win':
+-  gyp_args += ['-f', 'msvs', '-G', 'msvs_version=auto']
+ else:
+-  gyp_args += ['-f', 'make-' + flavor]
++  gyp_args += ['-f', 'make-' + flavor, '-D', 'OS='+flavor]
+ 
+ gyp_args += args
+ 
+diff --git a/deps/v8/BUILD.gn b/deps/v8/BUILD.gn
+index efa4b71..d6ff0c4 100644
+--- a/deps/v8/BUILD.gn
++++ b/deps/v8/BUILD.gn
+@@ -1162,7 +1162,7 @@ source_set("v8_libbase") {
+ 
+     defines += [ "_CRT_RAND_S" ]  # for rand_s()
+ 
+-    libs = [ "winmm.lib", "ws2_32.lib" ]
++    libs = [ "winmm", "ws2_32" ]
+   }
+ 
+   # TODO(jochen): Add support for qnx, freebsd, openbsd, netbsd, and solaris.
+diff --git a/deps/v8/src/base/platform/platform-win32.cc b/deps/v8/src/base/platform/platform-win32.cc
+index f18bb99..aef5b46 100644
+--- a/deps/v8/src/base/platform/platform-win32.cc
++++ b/deps/v8/src/base/platform/platform-win32.cc
+@@ -1201,6 +1201,7 @@ double OS::nan_value() {
+ #ifdef _MSC_VER
+   return std::numeric_limits<double>::quiet_NaN();
+ #else  // _MSC_VER
++#define NAN 0./0.
+   return NAN;
+ #endif  // _MSC_VER
+ }
+diff --git a/deps/v8/src/ostreams.cc b/deps/v8/src/ostreams.cc
+index 62304eb..c78d4fc 100644
+--- a/deps/v8/src/ostreams.cc
++++ b/deps/v8/src/ostreams.cc
+@@ -9,10 +9,6 @@
+ #include "src/base/platform/platform.h"  // For isinf/isnan with MSVC
+ #include "src/ostreams.h"
+ 
+-#if V8_OS_WIN
+-#define snprintf sprintf_s
+-#endif
+-
+ namespace v8 {
+ namespace internal {
+ 
+diff --git a/deps/v8/tools/gyp/v8.gyp b/deps/v8/tools/gyp/v8.gyp
+index c703155..8c951e7 100644
+--- a/deps/v8/tools/gyp/v8.gyp
++++ b/deps/v8/tools/gyp/v8.gyp
+@@ -1301,7 +1301,7 @@
+               ],
+               'msvs_disabled_warnings': [4351, 4355, 4800],
+               'link_settings':  {
+-                'libraries': [ '-lwinmm.lib', '-lws2_32.lib' ],
++                'libraries': [ '-lwinmm', '-lws2_32' ],
+               },
+             }],
+           ],
+diff --git a/node.gyp b/node.gyp
+index 46dbf39..2972856 100644
+--- a/node.gyp
++++ b/node.gyp
+@@ -334,7 +334,7 @@
+             'PLATFORM="win32"',
+             '_UNICODE=1',
+           ],
+-          'libraries': [ '-lpsapi.lib' ]
++          'libraries': [ '-lpsapi' ]
+         }, { # POSIX
+           'defines': [ '__POSIX__' ],
+         }],
+diff --git a/src/cares_wrap.cc b/src/cares_wrap.cc
+index 1764374..c456b3b 100644
+--- a/src/cares_wrap.cc
++++ b/src/cares_wrap.cc
+@@ -1299,10 +1299,10 @@ static void Initialize(Handle<Object> target,
+               Integer::New(env->isolate(), AF_INET6));
+   target->Set(FIXED_ONE_BYTE_STRING(env->isolate(), "AF_UNSPEC"),
+               Integer::New(env->isolate(), AF_UNSPEC));
+-  target->Set(FIXED_ONE_BYTE_STRING(env->isolate(), "AI_ADDRCONFIG"),
+-              Integer::New(env->isolate(), AI_ADDRCONFIG));
+-  target->Set(FIXED_ONE_BYTE_STRING(env->isolate(), "AI_V4MAPPED"),
+-              Integer::New(env->isolate(), AI_V4MAPPED));
++  target->Set(FIXED_ONE_BYTE_STRING(env->isolate(), "ARES_AI_ADDRCONFIG"),
++              Integer::New(env->isolate(), ARES_AI_ADDRCONFIG));
++  target->Set(FIXED_ONE_BYTE_STRING(env->isolate(), "ARES_AI_V4MAPPED"),
++              Integer::New(env->isolate(), ARES_AI_V4MAPPED));
+ 
+   Local<FunctionTemplate> aiw =
+       FunctionTemplate::New(env->isolate(), NewGetAddrInfoReqWrap);
+diff --git a/src/node.cc b/src/node.cc
+index e669706..54ccaa0 100644
+--- a/src/node.cc
++++ b/src/node.cc
+@@ -76,7 +76,6 @@
+ #define umask _umask
+ typedef int mode_t;
+ #else
+-#include <sys/resource.h>  // getrlimit, setrlimit
+ #include <unistd.h>  // setuid, getuid
+ #endif
+ 
+diff --git a/src/node_internals.h b/src/node_internals.h
+index 253bd38..66300ac 100644
+--- a/src/node_internals.h
++++ b/src/node_internals.h
+@@ -83,21 +83,6 @@ v8::Local<v8::Object> AddressToJS(
+     const sockaddr* addr,
+     v8::Local<v8::Object> info = v8::Handle<v8::Object>());
+ 
+-#ifdef _WIN32
+-// emulate snprintf() on windows, _snprintf() doesn't zero-terminate the buffer
+-// on overflow...
+-#include <stdarg.h>
+-inline static int snprintf(char* buf, unsigned int len, const char* fmt, ...) {
+-  va_list ap;
+-  va_start(ap, fmt);
+-  int n = _vsprintf_p(buf, len, fmt, ap);
+-  if (len)
+-    buf[len - 1] = '\0';
+-  va_end(ap);
+-  return n;
+-}
+-#endif
+-
+ #if defined(__x86_64__)
+ # define BITS_PER_LONG 64
+ #else
+diff --git a/src/node_main.cc b/src/node_main.cc
+index 6471551..d3b773b 100644
+--- a/src/node_main.cc
++++ b/src/node_main.cc
+@@ -22,7 +22,7 @@
+ #include "node.h"
+ 
+ #ifdef _WIN32
+-int wmain(int argc, wchar_t *wargv[]) {
++int main(int argc, wchar_t *wargv[]) {
+   // Convert argv to to UTF8
+   char** argv = new char*[argc];
+   for (int i = 0; i < argc; i++) {
+-- 
+2.6.1
+
