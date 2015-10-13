@@ -18,6 +18,7 @@ RECIPE_TYPES = "machine native sdk"
 SRC_URI = " \
     http://nodejs.org/dist/v${PV}/node-v${PV}.tar.gz \
     file://0001-initialize-arm_version-variable-in-gyp.patch \
+    file://0001-add-libdl-to-libraries-on-posix-targets.patch \
 "
 SRC_URI:>HOST_LIBC_mingw = " file://0001-fix-compilation-for-mingw-sdk.patch file://nameser.h"
 S = "${SRCDIR}/node-v${PV}"

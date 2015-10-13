@@ -1,0 +1,28 @@
+From ada98d25b1a8017adfba15ee363ec9af1768341f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20Hundeb=C3=B8ll?= <mnhu@prevas.dk>
+Date: Tue, 13 Oct 2015 20:49:18 +0200
+Subject: [PATCH] add libdl to libraries on posix targets
+
+When using external libuv, libdl is required for linking, but isn't
+picked up by gyp. Fix this by adding -ldl to libraries in node.gyp.
+
+Upstream-status: Inappropriate - upstream links statically with libuv
+---
+ node.gyp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/node.gyp b/node.gyp
+index 2972856..ab517ad 100644
+--- a/node.gyp
++++ b/node.gyp
+@@ -337,6 +337,7 @@
+           'libraries': [ '-lpsapi' ]
+         }, { # POSIX
+           'defines': [ '__POSIX__' ],
++          'libraries': [ '-ldl' ],
+         }],
+         [ 'OS=="mac"', {
+           # linking Corefoundation is needed since certain OSX debugging tools
+-- 
+2.6.1
+
