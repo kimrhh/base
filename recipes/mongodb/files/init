@@ -10,7 +10,7 @@ DESC="Mongo Database Server"
 
 MONGOD_PID_FILE="/var/run/mongod.pid"
 MONGOD_DB_PATH="/data/db"
-MONGOD_LOCK_FILE="$MONGOD_DB_PATH/mongod.lock"
+MONGOD_LOCK_FILE="mongod.lock"
 MONGOD_STORAGE_ENGINE="mmapv1"
 MONGOD_EXTRA_ARGS=""
 
@@ -53,7 +53,7 @@ init_start_repair() {
         --repair \
         2>&1 | logger
 
-    if [ -s $MONGOD_LOCK_FILE ]; then
+    if [ -s $MONGOD_DB_PATH/$MONGOD_LOCK_FILE ]; then
         echo "FAIL"
         echo -n "Wiping database path: "
         rm -rf $MONGOD_DB_PATH/*
@@ -77,7 +77,7 @@ init_stop() {
 init_stop_wait() {
     echo -n "Waiting for daemon to exit: "
     for i in $(seq 10) "failed"; do
-        [ -s $MONGOD_LOCK_FILE ] || break
+        [ -s $MONGOD_DB_PATH/$MONGOD_LOCK_FILE ] || break
         echo -n "."
         sleep 1
     done
@@ -91,15 +91,15 @@ init_stop_wait() {
 
 case "$1" in
     start)
-        [ -s $MONGOD_LOCK_FILE ] && ! init_is_running && init_start_repair
+        [ -s $MONGOD_DB_PATH/$MONGOD_LOCK_FILE ] && ! init_is_running && init_start_repair
         init_start
         ;;
     stop)
-        [ -s $MONGOD_LOCK_FILE ] && init_stop
+        [ -s $MONGOD_DB_PATH/$MONGOD_LOCK_FILE ] && init_stop
         ;;
     restart)
         init_is_running && init_stop && init_stop_wait
-        [ -s $MONGOD_LOCK_FILE ] && init_start_repair
+        [ -s $MONGOD_DB_PATH/$MONGOD_LOCK_FILE ] && init_start_repair
         init_start
         ;;
     *)
