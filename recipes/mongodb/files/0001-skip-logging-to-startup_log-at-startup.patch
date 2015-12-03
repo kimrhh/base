@@ -1,0 +1,88 @@
+From 03ebd530208718687f81f3fc8c943d25ba8c5ee2 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20Hundeb=C3=B8ll?= <mnhu@prevas.dk>
+Date: Thu, 3 Dec 2015 08:56:24 +0100
+Subject: [PATCH] skip logging to startup_log at startup
+
+When running from embedded devices without RTC, the startup logging
+sometimes fails due to a time collision in startup_log. This is caused
+by creating the index key from the system hostname appended with the
+milliseconds since epoch, which in the embedded case is always approx.
+the same.
+
+Fix this by removing the logging at startup log.
+
+startup_log:
+https://docs.mongodb.org/manual/reference/local-database/#local.startup_log
+
+upstream bug report:
+https://jira.mongodb.org/browse/SERVER-21751
+---
+ src/mongo/db/db.cpp | 45 ---------------------------------------------
+ 1 file changed, 45 deletions(-)
+
+diff --git a/src/mongo/db/db.cpp b/src/mongo/db/db.cpp
+index 2b4ab0e..03735c1 100644
+--- a/src/mongo/db/db.cpp
++++ b/src/mongo/db/db.cpp
+@@ -198,49 +198,6 @@ public:
+     }
+ };
+ 
+-static void logStartup() {
+-    BSONObjBuilder toLog;
+-    stringstream id;
+-    id << getHostNameCached() << "-" << jsTime().asInt64();
+-    toLog.append("_id", id.str());
+-    toLog.append("hostname", getHostNameCached());
+-
+-    toLog.appendTimeT("startTime", time(0));
+-    toLog.append("startTimeLocal", dateToCtimeString(Date_t::now()));
+-
+-    toLog.append("cmdLine", serverGlobalParams.parsedOpts);
+-    toLog.append("pid", ProcessId::getCurrent().asLongLong());
+-
+-
+-    BSONObjBuilder buildinfo(toLog.subobjStart("buildinfo"));
+-    appendBuildInfo(buildinfo);
+-    appendStorageEngineList(&buildinfo);
+-    buildinfo.doneFast();
+-
+-    BSONObj o = toLog.obj();
+-
+-    OperationContextImpl txn;
+-
+-    ScopedTransaction transaction(&txn, MODE_X);
+-    Lock::GlobalWrite lk(txn.lockState());
+-    AutoGetOrCreateDb autoDb(&txn, "local", mongo::MODE_X);
+-    Database* db = autoDb.getDb();
+-    const std::string ns = "local.startup_log";
+-    Collection* collection = db->getCollection(ns);
+-    WriteUnitOfWork wunit(&txn);
+-    if (!collection) {
+-        BSONObj options = BSON("capped" << true << "size" << 10 * 1024 * 1024);
+-        bool shouldReplicateWrites = txn.writesAreReplicated();
+-        txn.setReplicatedWrites(false);
+-        ON_BLOCK_EXIT(&OperationContext::setReplicatedWrites, &txn, shouldReplicateWrites);
+-        uassertStatusOK(userCreateNS(&txn, db, ns, options));
+-        collection = db->getCollection(ns);
+-    }
+-    invariant(collection);
+-    uassertStatusOK(collection->insertDocument(&txn, o, false).getStatus());
+-    wunit.commit();
+-}
+-
+ static void checkForIdIndexes(OperationContext* txn, Database* db) {
+     if (db->name() == "local") {
+         // we do not need an _id index on anything in the local database
+@@ -581,8 +538,6 @@ static void _initAndListen(int listenPort) {
+ 
+     PeriodicTask::startRunningPeriodicTasks();
+ 
+-    logStartup();
+-
+     // MessageServer::run will return when exit code closes its socket
+     server->run();
+ }
+-- 
+2.6.2
+

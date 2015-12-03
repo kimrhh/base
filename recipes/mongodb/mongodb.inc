@@ -40,6 +40,7 @@ SRC_URI = " \
     file://0001-remove-char-arguments-to-boost-mutex-constructors.patch \
     file://0001-include-operation-context-to-allow-dereferencing.patch \
     file://0001-remove-debug-flag-from-build.patch \
+    file://0001-skip-logging-to-startup_log-at-startup.patch \
 "
 
 S = "${SRCDIR}/mongodb-src-r${PV}/"
