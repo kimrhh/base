@@ -1,0 +1,1 @@
+4af2032a60ff22e322b1c5b270d6d2228f59a3a3  gnupg-2.1.11.tar.bz2
