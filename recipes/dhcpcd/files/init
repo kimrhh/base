@@ -16,7 +16,12 @@ do_start() {
 }
 
 do_stop() {
-    start-stop-daemon -K --pidfile $PIDFILE --exec $DAEMON
+    # only try to stop the daemon if there is actually something
+    # running. Otherwise a restart before a start will fail
+    start-stop-daemon -K -o --pidfile $PIDFILE --exec $DAEMON
+    if [ "$?" != "0" ] ; then
+	start-stop-daemon -K --pidfile $PIDFILE --exec $DAEMON
+    fi
 }
 
 do_status() {
