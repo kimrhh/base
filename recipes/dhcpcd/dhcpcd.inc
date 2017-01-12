@@ -26,6 +26,7 @@ DHCPCD_UDEV:USE_dhcpcd_udev = ""
 DEPENDS:>dhcpcd_udev = " libudev libdl"
 DEPENDS_${PN}:>dhcpcd_udev = " libudev libdl"
 RDEPENDS_${PN}:>dhcpcd_udev = " libudev libdl"
+PROVIDES_${PN} += "dhcp-client"
 
 EXTRA_OECONF += "${DHCPCD_UDEV}"
 
