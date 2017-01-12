@@ -68,3 +68,14 @@ do_install_initscript() {
     sysvinit_install_script ${SRCDIR}/init dhcpcd
 }
 do_install[prefuncs] += "do_install_initscript"
+
+RECIPE_FLAGS += "dhcpcd_args"
+DEFAULT_USE_dhcpcd_args = " "
+do_install_config() {
+    install -d ${D}/${sysconfdir}/default
+    echo 'ARGS="${USE_dhcpcd_args}"' > ${D}/${sysconfdir}/default/dhcpcd
+}
+do_install[prefuncs] += "do_install_config"
+PACKAGES =+ "${PN}-conf"
+FILES_${PN}-conf = "${sysconfdir}/default/dhcpcd ${sysconfdir}/dhcpcd.conf"
+RDEPENDS_${PN} += "${PN}-conf"
